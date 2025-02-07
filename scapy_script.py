@@ -126,7 +126,7 @@ def main():
     gateway_ip = sys.argv[4]
 
     while True:
-        sniff_https = raw_input("[?] Capture HTTPS traffic as well? (y/n): ").strip().lower()
+        sniff_https = raw_input("[?] Capture HTTPS traffic as well? (yes/y or no/n): ").strip().lower()
         if sniff_https in ["y", "yes"]:
             print "[+] HTTPS sniffing enabled (requires SSLstrip)"
             kill_process_on_port(8080)
@@ -136,7 +136,7 @@ def main():
             print "[+] HTTPS sniffing disabled"
             break
         else:
-            print "[-] Invalid input. Please enter 'y' or 'n'."
+            print "[-] Invalid input. Please enter 'yes/y' or 'no/n'."
 
     enable_ip_forwarding(True)
 
@@ -151,5 +151,4 @@ signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
     main()
-    
-    
+
